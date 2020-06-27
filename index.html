@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title></title>
+
+</head>
+
+<body id="page-top">
+
+  <div id="elm-app"></div>
+  <script src="js/elm.js"></script>
+
+  <script>
+    var app = Elm.Main.init({
+      node: document.getElementById("elm-app")
+    });
+
+    const RSS_URL = `https://danluu.com/atom.xml`;
+    let items = [];
+
+    fetch(RSS_URL)
+      .then(response => response.text())
+      .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
+      .then(data => {
+        const channel = data.querySelector("channel").querySelector("title").innerHTML;
+        data.querySelectorAll("item").forEach(el => {
+          items.push({
+            "feed": channel,
+            "title": el.querySelector("title").innerHTML,
+            "link": el.querySelector("link").innerHTML,
+            "pubDate": el.querySelector("pubDate").innerHTML,
+            "description": el.querySelector("description").innerHTML,
+          });
+        });
+        console.log(items);
+      });
+  </script>
+</body>
+</html>
