@@ -10,16 +10,44 @@
 
 <body id="page-top">
 
-  <div id="elm-app"></div>
-  <script src="js/elm.js"></script>
+  <div id="app">
+    <div v-for="item in items">
+        <h3> {{ item.title }} </h3>
+        <div v-html="item.description"></div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
   <script>
-    var app = Elm.Main.init({
-      node: document.getElementById("elm-app")
+
+    function _decodeHtml(html) {
+        let txt = document.createElement("textarea");
+        txt.innerHTML = html;
+        return txt.value;
+    }
+
+    function decodeHtml(html, url_prefix) {
+        let raw = _decodeHtml(html);
+        let d = document.createElement("div");
+        d.innerHTML = raw;
+        d.querySelectorAll("img").forEach(el => {
+            let src = el.src;
+            let path = src.replace(window.location.href, "");
+            el.src = url_prefix + path;
+        });
+        return _decodeHtml(d.innerHTML);
+    }
+
+    var item_list = [];
+
+    let app = new Vue({
+        el: "#app",
+        data: {
+            items: item_list
+        }
     });
 
     const RSS_URL = `https://danluu.com/atom.xml`;
-    let items = [];
 
     fetch(RSS_URL)
       .then(response => response.text())
@@ -27,15 +55,16 @@
       .then(data => {
         const channel = data.querySelector("channel").querySelector("title").innerHTML;
         data.querySelectorAll("item").forEach(el => {
-          items.push({
+          const link = el.querySelector("link").innerHTML;
+          const url_prefix = link.match(/(https?:\/\/[^\/]+)/)[0] + "/";
+          item_list.push({
             "feed": channel,
             "title": el.querySelector("title").innerHTML,
-            "link": el.querySelector("link").innerHTML,
+            "link": link,
             "pubDate": el.querySelector("pubDate").innerHTML,
-            "description": el.querySelector("description").innerHTML,
+            "description": decodeHtml(el.querySelector("description").innerHTML, url_prefix),
           });
         });
-        console.log(items);
       });
   </script>
 </body>
